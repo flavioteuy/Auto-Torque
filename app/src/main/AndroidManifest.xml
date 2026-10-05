@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 11+: sin esto no podemos "ver" ni conectarnos al servicio de Torque Pro -->
+    <queries>
+        <package android:name="org.prowl.torque" />
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AutoTorque">
+
+        <!-- Declara que la app tiene una interfaz para Android Auto basada en plantillas -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
+
+        <!-- Pantalla del teléfono: configuración y prueba -->
+        <activity
+            android:name=".phone.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Hace que la app aparezca en el menú "Plugins" de Torque Pro -->
+            <intent-filter>
+                <action android:name="org.prowl.torque.ACTIVITY_PLUGIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Punto de entrada de Android Auto.
+             Categoría IOT: si en tu versión de Android Auto la app no aparece,
+             cambiala por androidx.car.app.category.POI (ver README). -->
+        <service
+            android:name=".car.TorqueCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.IOT" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

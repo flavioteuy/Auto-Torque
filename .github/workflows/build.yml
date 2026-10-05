@@ -1,0 +1,54 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew assembleRelease --stacktrace 2>&1 | tee build.log
+          cp app/build/outputs/apk/release/app-release.apk AutoTorque.apk
+
+      # Si falla, deja los errores como anotaciones visibles en la página del build.
+      - name: Mostrar errores
+        if: failure()
+        run: |
+          grep -E "^e: |error:|What went wrong|Could not|FAILURE|^> |Exception" build.log | head -60 | while IFS= read -r l; do echo "::error::${l}"; done
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoTorque
+          path: AutoTorque.apk
+
+      # Publica el APK en "Releases". El último siempre queda en:
+      # https://github.com/<usuario>/<repo>/releases/latest/download/AutoTorque.apk
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: AutoTorque 1.0.${{ github.run_number }}
+          make_latest: "true"
+          body: |
+            Para instalar: en Windows, con el teléfono conectado por USB, ejecutá `instalar-AutoTorque.bat`.
+            O descargá `AutoTorque.apk` directamente desde el teléfono.
+          files: AutoTorque.apk
